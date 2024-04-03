@@ -29,6 +29,7 @@ class LatteFilter extends AFilter implements IFilter {
 		$this->addFunction('!_np', 2, 3, 1);
 	}
 
+	/** @return mixed[] */
 	public function extract(string $file): array {
 		$data = array();
 
@@ -69,6 +70,7 @@ class LatteFilter extends AFilter implements IFilter {
 		return $data;
 	}
 
+	/** @return mixed[] */
 	private function processFunction(array $definition, FuncCall $node): array {
 		$message = [];
 		foreach ($definition as $type => $position) {
@@ -85,6 +87,7 @@ class LatteFilter extends AFilter implements IFilter {
 		return $message;
 	}
 
+	/** @param mixed[] $functions */
 	private function findMacroName(string $text, array $functions): ?string {
 		foreach ($functions as $function) {
 			if (strpos($text, '{'.$function) === 0) {

@@ -14,7 +14,7 @@ interface IFilter {
 	 * Extracts gettext phrases from a file
 	 *
 	 * @param string $file
-	 * @return array List<Map<KEY, string>>
+	 * @return mixed[] List<Map<KEY, string>>
 	 */
 	public function extract(string $file): array;
 }
