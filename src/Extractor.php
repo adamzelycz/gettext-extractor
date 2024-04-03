@@ -27,23 +27,23 @@ class Extractor {
 	/** @var string */
 	protected $logFile;
 
-	/** @var array */
+	/** @var mixed[] */
 	protected $inputFiles = array();
 
-	/** @var array */
+	/** @var mixed[] */
 	protected $filters = array(
 		'php' => array('PHP')
 	);
 
-	/** @var array */
+	/** @var mixed[] */
 	protected $filterStore = array();
 
-	/** @var array */
+	/** @var mixed[] */
 	protected $comments = array(
 		'Gettext keys exported by GettextExtractor'
 	);
 
-	/** @var array */
+	/** @var mixed[] */
 	protected $meta = array(
 		'POT-Creation-Date' => '',
 		'PO-Revision-Date' => 'YEAR-MO-DA HO:MI+ZONE',
@@ -55,8 +55,8 @@ class Extractor {
 		'Plural-Forms' => 'nplurals=INTEGER; plural=EXPRESSION;'
 	);
 
-	/** @var array */
-	protected $data = array();
+	/** @var mixed[] */
+	protected $data = [];
 
 	public function __construct(string $logFile = 'php://stderr') {
 		$this->logFile = $logFile;
@@ -88,9 +88,9 @@ class Extractor {
 	 * @return self
 	 */
 	public function scan($resource): self {
-		$this->inputFiles = array();
+		$this->inputFiles = [];
 		if (!is_array($resource)) {
-			$resource = array($resource);
+			$resource = [$resource];
 		}
 		foreach ($resource as $item) {
 			$this->log("Scanning '$item'");

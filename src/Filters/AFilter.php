@@ -12,7 +12,7 @@ use Vodacek\GettextExtractor\Extractor;
 
 abstract class AFilter {
 
-	/** @var array */
+	/** @var mixed[] */
 	protected $functions = array();
 
 	/**

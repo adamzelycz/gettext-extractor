@@ -22,7 +22,7 @@ use Vodacek\GettextExtractor\Extractor;
 
 class PHPFilter extends AFilter implements IFilter, PhpParser\NodeVisitor {
 
-	/** @var array */
+	/** @var mixed[] */
 	private $data = [];
 
 	public function __construct() {
@@ -36,6 +36,7 @@ class PHPFilter extends AFilter implements IFilter, PhpParser\NodeVisitor {
 		$this->addFunction('_np', 2, 3, 1);
 	}
 
+	/** @return mixed[] */
 	public function extract(string $file): array {
 		$this->data = array();
 		$parser = (new PhpParser\ParserFactory())->create(PhpParser\ParserFactory::PREFER_PHP7);
@@ -73,7 +74,7 @@ class PHPFilter extends AFilter implements IFilter, PhpParser\NodeVisitor {
 	}
 
 	/**
-	 * @param array $definition
+	 * @param mixed[] $definition
 	 * @param Node $node
 	 * @param Arg[] $args
 	 */
@@ -133,12 +134,14 @@ class PHPFilter extends AFilter implements IFilter, PhpParser\NodeVisitor {
 
 	/* PhpParser\NodeVisitor: dont need these *******************************/
 
-	public function afterTraverse(array $nodes) {
+	/** @param mixed[] $nodes */
+	public function afterTraverse(array $nodes): void {
 	}
 
-	public function beforeTraverse(array $nodes) {
+	/** @param mixed[] $nodes */
+	public function beforeTraverse(array $nodes): void {
 	}
 
-	public function leaveNode(Node $node) {
+	public function leaveNode(Node $node): void {
 	}
 }
