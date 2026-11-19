@@ -237,7 +237,7 @@ class Extractor {
 	 * @param array $data
 	 * @return self
 	 */
-	public function save(string $outputFile, array $data = null): self {
+	public function save(string $outputFile, ?array $data = null): self {
 		FileSystem::write($outputFile, $this->formatData($data ?: $this->data));
 		return $this;
 	}
@@ -311,7 +311,7 @@ class Extractor {
 		}
 	}
 
-	private function formatMessage(string $message, string $prefix = null): string {
+	private function formatMessage(string $message, ?string $prefix = null): string {
 		$message = addcslashes($message, self::ESCAPE_CHARS);
 		$message = '"' . str_replace("\n", "\\n\"\n\"", $message) . '"';
 		return ($prefix !== null ? $prefix.' ' : '') . $message;
