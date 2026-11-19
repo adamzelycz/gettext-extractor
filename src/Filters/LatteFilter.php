@@ -14,7 +14,8 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
 use Vodacek\GettextExtractor\Extractor;
 use PhpParser;
-use Latte;
+use Latte\Compiler\TemplateLexer;
+use Latte\Compiler\Token;
 
 class LatteFilter extends AFilter implements IFilter {
 
@@ -33,25 +34,18 @@ class LatteFilter extends AFilter implements IFilter {
 	public function extract(string $file): array {
 		$data = array();
 
-		$latteParser = new Latte\Parser();
-		$tokens = $latteParser->parse(FileSystem::read($file));
-
 		$functions = array_keys($this->functions);
 		usort($functions, static function(string $a, string $b) {
 			return strlen($b) <=> strlen($a);
 		});
 
 		$phpParser = (new PhpParser\ParserFactory())->create(PhpParser\ParserFactory::PREFER_PHP7);
-		foreach ($tokens as $token) {
-			if ($token->type !== Latte\Token::MACRO_TAG) {
-				continue;
-			}
-
-			$name = $this->findMacroName($token->text, $functions);
+		foreach ($this->findTags(FileSystem::read($file)) as [$content, $line]) {
+			$name = $this->findMacroName('{' . $content, $functions);
 			if ($name === null) {
 				continue;
 			}
-			$value = $this->trimMacroValue($name, $token->value);
+			$value = substr($content, strlen($name));
 			$stmts = $phpParser->parse("<?php\nf($value);");
 
 			if ($stmts === null) {
@@ -61,13 +55,64 @@ class LatteFilter extends AFilter implements IFilter {
 				foreach ($this->functions[$name] as $definition) {
 					$message = $this->processFunction($definition, $stmts[0]->expr);
 					if ($message !== []) {
-						$message[Extractor::LINE] = $token->line;
+						$message[Extractor::LINE] = $line;
 						$data[] = $message;
 					}
 				}
 			}
 		}
 		return $data;
+	}
+
+	/**
+	 * Latte tags as [content between the delimiters without modifiers, line]. The lexer is driven without
+	 * the template parser, so tags unknown to Latte (custom macros) do not fail.
+	 * @return array{string, int}[]
+	 */
+	private function findTags(string $template): array {
+		$lexer = new TemplateLexer();
+		$tags = array();
+		$content = null;
+		$line = 0;
+		$depth = 0;
+		$modifiers = false;
+		foreach ($lexer->tokenize($template) as $token) {
+			if ($token->is(Token::Latte_TagOpen)) {
+				$content = '';
+				$line = $token->position->line;
+				$depth = 0;
+				$modifiers = false;
+				$lexer->pushState(TemplateLexer::StateLatteTag);
+
+			} elseif ($token->is(Token::Latte_TagClose) && $content !== null) {
+				$lexer->popState();
+				$tags[] = [$content, $line];
+				if (preg_match('#^syntax\s+(\w+)#', $content, $m) === 1) {
+					$lexer->setSyntax($m[1], 'syntax');
+				} elseif ($content === '/syntax') {
+					$lexer->popSyntax();
+				}
+				$content = null;
+
+			} elseif ($token->is(Token::Latte_CommentOpen)) {
+				$lexer->pushState(TemplateLexer::StateLatteComment);
+
+			} elseif ($token->is(Token::Latte_CommentClose)) {
+				$lexer->popState();
+
+			} elseif ($content !== null && !$modifiers) {
+				if ($token->is('(', '[', '{')) {
+					$depth++;
+				} elseif ($token->is(')', ']', '}')) {
+					$depth--;
+				} elseif ($depth === 0 && $token->is('|')) {
+					$modifiers = true;
+					continue;
+				}
+				$content .= $token->text;
+			}
+		}
+		return $tags;
 	}
 
 	/** @return mixed[] */
@@ -95,20 +140,5 @@ class LatteFilter extends AFilter implements IFilter {
 			}
 		}
 		return null;
-	}
-
-	private function trimMacroValue(string $name, string $value): string {
-		if (strpos($name, '!') === 0) {
-			// exclamation mark is never removed
-			return trim(substr($value, strlen($name)));
-		}
-
-		if (strpos($name, '_') === 0) {
-			// only underscore is removed
-			$offset = strlen(ltrim($name, '_'));
-			return substr($value, $offset);
-		}
-
-		return $value;
 	}
 }

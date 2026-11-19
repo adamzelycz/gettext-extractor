@@ -24,7 +24,7 @@ abstract class AFilter {
 	 * @param int|null $context
 	 * @return self
 	 */
-	public function addFunction(string $functionName, int $singular = 1, int $plural = null, int $context = null): self {
+	public function addFunction(string $functionName, int $singular = 1, ?int $plural = null, ?int $context = null): self {
 		if ($singular <= 0) {
 			throw new InvalidArgumentException('Invalid argument type or value given for parameter $singular.');
 		}

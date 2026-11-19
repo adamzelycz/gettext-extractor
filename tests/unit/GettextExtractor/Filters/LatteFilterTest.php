@@ -101,6 +101,15 @@ class LatteFilterTest extends TestCase {
 		self::assertSame(array($expected), $messages);
 	}
 
+	public function testSkipsCommentsAndSyntaxOff(): void {
+		$messages = $this->object->extract(__DIR__ . '/../../data/latte/syntax.latte');
+
+		self::assertSame(array(
+			array(GE\Extractor::SINGULAR => 'In attribute', GE\Extractor::LINE => 2),
+			array(GE\Extractor::SINGULAR => 'After syntax', GE\Extractor::LINE => 6),
+		), $messages);
+	}
+
 	/**
 	 * @group bug6
 	 */
